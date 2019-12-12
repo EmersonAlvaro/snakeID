@@ -1,0 +1,21 @@
+
+
+(0004)Naja mossambica - Mozambique Spitting Cobra (https://www.inaturalist.org/taxa/30488-Naja-mossambica/browse_photos)
+(0001)Dendroaspis polylepis -Black Mamba (https://www.inaturalist.org/taxa/30405-Dendroaspis-polylepis/browse_photos)
+(0002)Thelotornis capensis - Twig Snake (https://www.inaturalist.org/taxa/28334-Thelotornis-capensis/browse_photos)
+(0000)Bitis arientans - Puff Adder (https://www.inaturalist.org/taxa/115431-Bitis-arietans-arietans/browse_photos)
+(0003)Dispholidus typus - Boomslang (https://www.inaturalist.org/taxa/30358-Dispholidus-typus/browse_photos)
+
+
+Reptile database
+iNaturalist
+snakedatabase.org
+AfricanSnakeBite
+
+
+wernerconradie@gmail.com
+___________________________________________________________________________________
+
+https://medium.com/tensorflow/multi-gpu-training-with-estimators-tf-keras-and-tf-data-ba584c3134db
+
+
