@@ -7,12 +7,10 @@ import os
 
 import cv2 as cv
 
-from tensorflow.python.keras import layers
-from tensorflow.python.keras import models
-from tensorflow.python.keras.utils import np_utils
+from tensorflow.keras import layers
+from tensorflow.keras import models
+# from tensorflow.keras.utils import np_utils
 from sklearn import metrics
-from snake.DataSplit import *
-
 
 num_class = 5
 IMAGE_SIZE = 224
