@@ -8,11 +8,12 @@ import pathlib
 import os
 import cv2 as cv
 
-from tensorflow.python.keras import layers
-from tensorflow.python.keras import models
-from tensorflow.python.keras.utils import np_utils
+from tensorflow.keras import layers
+from tensorflow.keras import models
+# from tensorflow.keras.utils import np_utils
 from sklearn import metrics
-from tensorflow.python.keras.utils.vis_utils import plot_model
+from tensorflow.keras.utils import plot_model
+
 
 num_class = 5
 IMAGE_SIZE = 299

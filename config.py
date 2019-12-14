@@ -1,37 +1,29 @@
 import pathlib
+import os
+import cv2 as cv
 
 
-data_root = pathlib.Path('dataroot')
-all_data = pathlib.Path('dataroot/alldata')
-train_data = pathlib.Path('dataroot/traindata')
-test_data = pathlib.Path('dataroot/testdata')
-validation_data =pathlib.Path('dataroot/validation_data')
 
+data_root = pathlib.Path('dataset/MozSnake')
 
-IMAGE_SIZE = 124
+num_class = 5
+IMAGE_SIZE = 299
+train_data = pathlib.Path('/content/drive/My Drive/MozSnake/Training/')  #Only for Google drive
 
-TrainPer = 0.7
-TestPer =0.15
-ValidationPer =0.15
+def load_data(data_directory):
 
-
-# if not train_data.exists():
-#     print('make dir train')
-#     train_data.mkdir()
-#     for dr in all_data.glob('*/'):
-#         path =train_data.joinpath(dr.name)
-#         pathlib.Path(path).mkdir()
-#
-# if not test_data.exists():
-#     print('make dir test')
-#     test_data.mkdir()
-#     for dr in all_data.glob('*/'):
-#         path =test_data.joinpath(dr.name)
-#         pathlib.Path(path).mkdir()
-#
-# if not validation_data.exists():
-#     print('make dir validation')
-#     validation_data.mkdir()
-#     for dr in all_data.glob('*/'):
-#         path =validation_data.joinpath(dr.name)
-#         pathlib.Path(path).mkdir()
+    directories = [d for d in os.listdir(data_directory)
+                   if os.path.isdir(os.path.join(data_directory, d))]
+    labels = []
+    images = []
+    for d in directories:
+        label_directory = os.path.join(data_directory, d)
+        file_names = [os.path.join(label_directory, f)
+                      for f in os.listdir(label_directory)]
+        for f in file_names:
+            img = cv.imread(f)
+            img = cv.resize(img,(IMAGE_SIZE,IMAGE_SIZE))
+            # cv.imwrite(f,img)
+            images.append(img)
+            labels.append(int(d))
+    return images, labels

@@ -12,8 +12,9 @@ import pydotplus
 
 from tensorflow.keras import layers
 from tensorflow.keras import models
+# from tensorflow.keras.utils import np_utils
+from sklearn import metrics
 from tensorflow.keras.utils import plot_model
-# from tensorflow.python.keras.utils import np_utils
 from sklearn import metrics
 from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedKFold
