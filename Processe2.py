@@ -1,114 +1,202 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-import tensorflow as tf
-import numpy as np
 import pathlib
 import os
-
-from tensorflow import keras
-from snake.config import *
+import random
 import cv2 as cv
-# import keras
-from keras.utils import np_utils
-# from keras.models import Sequential
-# from keras.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPool2D, Embedding, LSTM
-#
-import matplotlib.pyplot as plt
+import shutil
+import numpy as np
+from PIL import Image
+import imutils
 
-ROOT_PATH = pathlib.Path('TraficSigns')
-TRAIN_PATH =pathlib.Path('TraficSigns/Training')
-TEST_PATH =pathlib.Path('TraficSigns/Testing')
+from skimage import exposure
 
-def load_data(data_directory):
-    drid = 0;
+
+train_data = pathlib.Path('dataset/MozSnake/train')
+# test_data = pathlib.Path('Dataset/MozSnake/test')
+
+
+IMAGE_SIZE = 256
+
+Nomes = ['PuffAdder', 'BlackMamba', 'SpitingCobra', 'Boomslang']
+i0 = 0
+i1 = 0
+i2 = 0
+i3 = 0
+i4 = 0
+
+def data_augmentation(data_directory):
+
+    global i0
+
     directories = [d for d in os.listdir(data_directory)
                    if os.path.isdir(os.path.join(data_directory, d))]
-    labels = []
-    images = []
+    file_names = []
     for d in directories:
         label_directory = os.path.join(data_directory, d)
-        file_names = [os.path.join(label_directory, f)
-                      for f in os.listdir(label_directory)
-                      if f.endswith(".jpg")]
-        for f in file_names:
-            img = cv.imread(f)
-            # img = cv.resize(img,(IMAGE_SIZE,IMAGE_SIZE))
-            # cv.imwrite(f,img)
-            images.append(img)
-            labels.append(int(drid))
+        file_names += [os.path.join(label_directory, f)
+                       for f in os.listdir(label_directory)]
 
-        drid = drid +1;
-    return images, labels
+    for f in file_names:
+        print(f)
+        img = cv.imread(f)
+        img = preprocess(img, IMAGE_SIZE, IMAGE_SIZE)
 
-images, labels = load_data(str(train_data))
+        # cv.imwrite(f, img)
 
+        img1 = contrast_stretching(img)
+        img_fv = flip(img1, vflip=True, hflip=False) #flip vertical
+        save_image(img_fv, f, 'flipvert')
 
-imgs = np.asarray(images)
-labs = np.array(labels)
-labs = np_utils.to_categorical(labs,13)
+        img2 = HE(img)
+        img2 *= 255
+        save_image(img2, f, 'he')
 
-# print(imgs.shape)
-# print(labs.shape)
+        img_fh = flip(img, vflip=False, hflip=True) #flip vertical
+        save_image(img_fh, f, 'fliphori')
 
-images, labels = load_data(str(test_data))
-imgs_test = np.asarray(images)
-labs_test = np.array(labels)
-labs_test = np_utils.to_categorical(labs_test,13)
+        img3 = AHE(img)
+        img3 *=255
+        save_image(img3, f, 'ahe')
 
-# print('-------------------------------------')
-# print(imgs_test.shape)
-# print(labs_test.shape)
+        print("Done it")
 
 
-# First Model Build
+def save_image(img, pathfoto, type):
 
-input_shape =(IMAGE_SIZE,IMAGE_SIZE, 3)
+    global  i0, i1, i2, i3, i4
 
-model = keras.Sequential ([
-    keras.layers.Conv2D(32, (3, 3), input_shape=input_shape, activation=tf.nn.relu),
-    # keras.layers.Conv2D(32, (3, 3), activation=tf.nn.relu),
-    # keras.layers.Conv2D(32, (3, 3), activation=tf.nn.relu),
-    keras.layers.MaxPooling2D(pool_size=(2, 2)),
-    # keras.layers.Dropout(0.25),
-    # keras.layers.Flatten(),
-    # keras.layers.Dense(64,  activation=tf.nn.relu),
-    keras.layers.Dense(64, activation=tf.nn.relu),
-    keras.layers.Flatten(),
-    # keras.layers.Dropout(0.25),
-    keras.layers.Dense(13, activation=tf.nn.softmax)
+    dirname = os.path.split(os.path.dirname(pathfoto))[1]
 
-])
-model.compile(loss=tf.keras.losses.categorical_crossentropy,
-              optimizer=tf.keras.optimizers.Adam(),
-              metrics=['accuracy'])
+    if int(dirname) == 0:
+        i0 += 1
+        cv.imwrite(os.path.dirname(pathfoto) + "/" + Nomes[int(dirname)]+str(i0) +type + ".jpg", img)
+    if int(dirname) == 1:
+        i1 += 1
+        cv.imwrite(os.path.dirname(pathfoto) + "/" + Nomes[int(dirname)]+str(i1) +type + ".jpg", img)
+    if int(dirname) == 2:
+        i2 += 1
+        cv.imwrite(os.path.dirname(pathfoto) + "/" + Nomes[int(dirname)]+str(i2) +type + ".jpg", img)
+    if int(dirname) == 3:
+        i3 += 1
+        cv.imwrite(os.path.dirname(pathfoto) + "/" + Nomes[int(dirname)]+str(i3) +type + ".jpg", img)
 
-# print(model.summary())
+def preprocess(image, width, height, inter=cv.INTER_AREA):
+    width = width
+    height = height
+    inter = inter
 
-model.fit(imgs, labs,
-          batch_size=124, epochs=10,
-          validation_data=(imgs_test, labs_test),
-          verbose=1)
+    (h, w) = image.shape[:2]
+    dW = 0
+    dH = 0
 
-# model.save('my_model.h5')
+    if w < h:
+        image = imutils.resize(image, width=width, inter=inter)
+        dH = int((image.shape[0] - height) / 2.0)
+    else:
+        image = imutils.resize(image, height=height,inter=inter)
+        dW = int((image.shape[1] - width) / 2.0)
 
-# input_layer = keras.layers.Dense (64,input_shape=input_shape,activation='relu')
+    (h, w) = image.shape[:2]
+    image = image[dH:h - dH, dW:w - dW]
 
-# model.add(LSTM(32, input_shape=input_shape))
-# # model.add(input_layer)
+    return cv.resize(image, (width, height),interpolation=inter)
+
+def rotate(image, angle):
+
+    rows, cols, c = image.shape
+    M = cv.getRotationMatrix2D((cols / 2, rows / 2), angle, 1)
+    image = cv.warpAffine(image, M, (cols, rows))
+
+    return image
+
+
+def flip (image, vflip=False, hflip=False):
+
+    if hflip or vflip:
+        if hflip and vflip:
+            c = -1
+        else:
+            c = 0 if vflip else 1
+        image = cv.flip(image, flipCode=c)
+    return image
+
+def contrast (image,ksize):
+
+    image = cv.Sobel(image,cv.CV_64F,1,0,ksize=ksize)
+
+    return image
+
+def averageing_blur(image,shift):
+    image=cv.blur(image,(shift,shift))
+    return image
+
+def erosion_image(image,shift):
+    kernel = np.ones((shift,shift),np.uint8)
+    image = cv.erode(image,kernel,iterations = 1)
+    return image
+
+def dilation_image(image,shift):
+    kernel = np.ones((shift, shift), np.uint8)
+    image = cv.dilate(image,kernel,iterations = 1)
+    return image
+
+def adjust_gamma(image, gamma=1.0):
+	# build a lookup table mapping the pixel values [0, 255] to
+	# their adjusted gamma values
+	invGamma = 1.0 / gamma
+	table = np.array([((i / 255.0) ** invGamma) * 255
+		for i in np.arange(0, 256)]).astype("uint8")
+	# apply gamma correction using the lookup table
+	return cv.LUT(image, table)
+
+
+# Contrast stretching
+def contrast_stretching(img):
+    p2, p98 = np.percentile(img, (2, 98))
+    img_rescale = exposure.rescale_intensity(img, in_range=(p2, p98))
+    return img_rescale
+
+# Histogram equalization
+def HE(img):
+    img_eq = exposure.equalize_hist(img)
+    return img_eq
+
+# Adaptive histogram equalization
+def AHE(img):
+    img_adapteq = exposure.equalize_adapthist(img, clip_limit=0.03)
+    return img_adapteq
+
+# data_augmentation(train_data)
+# print("Helllo There")
 #
-# # model.add(Conv2D(48, (3, 3), activation="relu"))
-# # model.add(MaxPool2D(pool_size=(2,2)))
-# model.add(Dense(64, activation='relu'))
+
+img = cv.imread("TestA.jpeg")
+img = preprocess(img, IMAGE_SIZE, IMAGE_SIZE)
+cv.imwrite('TestAR.jpg', img)
+
+img1 = contrast_stretching(img)
+img_fv = flip(img1, vflip=True, hflip=False) #flip vertical
+cv.imwrite('TestAFVC.jpg', img_fv)
+
+img2 = HE(img)
+img2 *= 255
+cv.imwrite('TestAHE.jpg', img2)
+
+img_fh = flip(img, vflip=False, hflip=True) #flip vertical
+cv.imwrite('TestAFH.jpg', img_fh)
+
+img3 = AHE(img)
+img3 *=255
+cv.imwrite('TestAAHE.jpg', img3)
+
+
+# imgCon = np.concatenate((img/255, img_fh/255, img_fv/255, img2, img3), axis=1)
+# imgCon = np.concatenate((img, img_fv, img2, img_fh, img3), axis=1)
+
+# img = cv.imread("dataset/MozSnake/test/0004/spitingcobra (6).jpg")
+# cv.imshow("Rotated", imgCon)
+# cv.waitKey(0)
 #
-# # model.add(Dropout(0.5))
-# model.add(Dense(64,activation='relu'))
-# model.add(Flatten())
-# model.add(Dense(13, activation='softmax'))
-#
-# model.compile(loss='categorical_crossentropy',
-#               optimizer='adam',
-#               metrics=['accuracy'])
-#
-# # print(model.summary())
-#
-# model.fit(imgs, labs,
-#           batch_size=124, epochs=5, verbose=1)
+# img1 = AHE(img)
+# cv.imshow("Rotated", img1)
+# cv.waitKey(0)
+

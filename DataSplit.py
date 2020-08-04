@@ -3,92 +3,55 @@ import os
 import random
 import cv2 as cv
 import shutil
+import numpy as np
 
-data_root = pathlib.Path('dataroot')
-all_data = pathlib.Path('dataroot/alldata')
-train_data = pathlib.Path('dataroot/traindata')
-test_data = pathlib.Path('dataroot/testdata')
-validation_data =pathlib.Path('dataroot/validation_data')
-TRAIN_K_DATA = pathlib.Path('dataroot/TRAIN_K_DATA')
-
+train_data = pathlib.Path('Dataset/MozSnake/train')
+test_data = pathlib.Path('Dataset/MozSnake/test')
 IMAGE_SIZE = 224
 
 
-
-def creat_fold(k):
-
-    if TRAIN_K_DATA.exists():
-        shutil.rmtree(TRAIN_K_DATA)
-
-    if not TRAIN_K_DATA.exists():
-        TRAIN_K_DATA.mkdir()
+splitperc = 0.15
 
 
-    pathFolders = []
+def creat_fold():
 
-    for i in range(k):
-        fold = 'Fold' + str(i)
-        pathfold = TRAIN_K_DATA.joinpath(fold)
-        pathlib.Path(pathfold).mkdir()
-
-        pathFolders.append(pathfold)
-
-        for dr in all_data.glob('*/'):
-            pathSpecies =pathfold.joinpath(dr.name)
-            pathlib.Path(pathSpecies).mkdir()
-            files = os.listdir(dr)
-
-    return pathFolders
-# creat_fold(5)
-
-def split_data (k):
-
-    pathFolders = creat_fold(k)
-
-    for dr in all_data.iterdir():
-
-        files = files = os.listdir(dr)
+    for dr in train_data.glob('*/'):
+        pathSpecies =test_data.joinpath(dr.name)
+        pathlib.Path(pathSpecies).mkdir()
+        files = os.listdir(dr)
 
         random.shuffle(files)
 
-        QtdOriginal =round( len(files)/ k)
-        fold = 0
+        qtd = round(len(files) * splitperc)
 
-        Qtd = round(QtdOriginal);
+        for i in range(qtd):
+            src = train_data.joinpath(dr.name).joinpath(files[i])
+            dst = test_data.joinpath(dr.name).joinpath(files[i])
+            os.rename(src, dst)
 
-        directories = [os.path.join(TRAIN_K_DATA,d)
-                       for d in os.listdir(TRAIN_K_DATA)
-                       if os.path.isdir(os.path.join(TRAIN_K_DATA, d))]
+    return 1
 
-        # print('====================')
-        # print(len(files))
-        # print(round(QtdOriginal))
+def load_data(data_directory):
+    directories = [d for d in os.listdir(data_directory)
+                   if os.path.isdir(os.path.join(data_directory, d))]
+    labels = []
+    images = []
+    for d in directories:
+        label_directory = os.path.join(data_directory, d)
+        file_names = [os.path.join(label_directory, f)
+                      for f in os.listdir(label_directory)]
+        for f in file_names:
+            img = cv.imread(f)
+            img = cv.resize(img, (IMAGE_SIZE, IMAGE_SIZE))
+            # cv.imwrite(f,img)
+            images.append(img)
+            labels.append(int(d))
 
+    images, labels = np.asarray(images), np.asarray(labels)
 
-        for i in range(len(files)):
+    return images, labels
 
-            photoOrigPath = all_data.joinpath(str(dr.name)).joinpath(files[i])
+imagens, labels = load_data(str(train_data))
+print("Helllo There")
 
-            if i ==Qtd and i <= len(files):
-                if fold == k-1:
-                    fold = fold
-                else:
-                    fold=fold +1
-                Qtd = Qtd+QtdOriginal
-            # print('fold', fold, 'index====', i)
-
-            # print(os.path.join(directories[fold], files[i]))
-            # f = os.path.join()
-            # if os.path.getsize(photoOrigPath) != 0:
-            # print(photoOrigPath)
-            f=os.path.join(directories[fold], dr.name, files[i])
-
-            img = cv.imread(str(photoOrigPath), 1)
-            img = cv.resize(img,(IMAGE_SIZE,IMAGE_SIZE))
-            cv.imwrite(f,img)
-
-        fold = 0
-
-    return pathFolders
-
-# split_data(5)
+# creat_fold();
